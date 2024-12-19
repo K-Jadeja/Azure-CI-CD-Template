@@ -27,14 +27,18 @@ jobs:
         login-server: ${{ secrets.ACR_LOGIN_SERVER }}
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
-        
-    # Step 4: Build and push the Docker image
+
+    # Step 4: Write .env file content into a file (from GitHub Secrets)
+    - name: Write .env file
+      run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env    
+    
+    # Step 5: Build and push the Docker image
     - name: Build and Push Docker Image
       run: |
         docker build . -t ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
         docker push ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
 
-    # Step 5: Deploy to Azure Container Instances
+    # Step 6: Deploy to Azure Container Instances
     - name: Deploy to Azure Container Instances
       uses: azure/aci-deploy@v1
       with:
@@ -47,3 +51,4 @@ jobs:
         location: 'eastus'
         cpu: 4   # Optional
         memory: 8   # Optional
+        environment-variables: DOTENV_PATH=/mnt/env/.env
