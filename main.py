@@ -2,6 +2,10 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 import os
 from uuid import uuid4
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv("/mnt/env/.env")
 
 app = FastAPI()
 
@@ -29,3 +33,11 @@ async def view_file(file_id: str):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path)
+
+@app.get("/checkenv")
+def check_environment_variables():
+    return {"environment_variables": dict(os.environ)}
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello, World!"}
