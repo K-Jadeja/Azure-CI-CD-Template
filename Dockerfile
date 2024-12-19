@@ -8,12 +8,11 @@ WORKDIR /app
 COPY requirements.txt . 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code and the .env file
+# Copy the application code
 COPY . .
-COPY .env /mnt/env/.env
 
 # Expose the port FastAPI will run on
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
