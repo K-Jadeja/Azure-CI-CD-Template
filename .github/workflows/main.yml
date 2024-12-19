@@ -51,6 +51,8 @@ jobs:
         location: 'eastus'
         cpu: 4
         memory: 8
-        environment-variables: DOTENV_PATH=/mnt/env/.env
-        ports: 80
+        ports: 8000
         ip-address: Public
+        environment-variables: |
+          $(echo "${{ secrets.ENV_FILE_CONTENT }}" | tr '\n' ' ')
+    
