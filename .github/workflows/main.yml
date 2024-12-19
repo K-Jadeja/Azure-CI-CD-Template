@@ -29,8 +29,18 @@ jobs:
         password: ${{ secrets.ACR_PASSWORD }}
 
     # Step 4: Write .env file content into a file (from GitHub Secrets)
-    - name: Write .env file
-      run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env    
+    - name: Parse and Deploy Environment Variables
+      run: |
+         echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+         while IFS='=' read -r key value; do
+          if [[ $key =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            echo "$key=$value" >> env_vars.txt
+          else
+            echo "Invalid environment variable name: $key"
+            exit 1
+          fi
+         done < .env
+      shell: bash
     
     # Step 5: Build and push the Docker image
     - name: Build and Push Docker Image
@@ -54,5 +64,6 @@ jobs:
         ports: 8000
         ip-address: Public
         environment-variables: |
-          $(echo "${{ secrets.ENV_FILE_CONTENT }}" | tr '\n' ' ')
+          $(cat env_vars.txt | tr '\n' ' ')
+
     
