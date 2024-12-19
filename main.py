@@ -2,12 +2,10 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 import os
 from uuid import uuid4
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 
-# Load environment variables from the .env file or fallback to runtime
-if os.environ.get("DOTENV_PATH"):
-    env_values = dotenv_values(os.environ["DOTENV_PATH"])
-    os.environ.update(env_values)
+# Load environment variables from the .env file
+load_dotenv()
 
 
 app = FastAPI()
@@ -39,7 +37,8 @@ async def view_file(file_id: str):
 
 @app.get("/checkenv")
 def check_environment_variables():
-    return {"environment_variables": dict(os.environ)}
+    # Return environment variables as a dictionary
+    return {"environment_variables": {key: os.getenv(key) for key in os.environ}}
 
 @app.get("/")
 def read_root():
