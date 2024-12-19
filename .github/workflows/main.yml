@@ -37,7 +37,7 @@ jobs:
       run: |
         docker build . -t ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
         docker push ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
-
+    
     # Step 6: Deploy to Azure Container Instances
     - name: Deploy to Azure Container Instances
       uses: azure/aci-deploy@v1
@@ -49,6 +49,8 @@ jobs:
         registry-password: ${{ secrets.ACR_PASSWORD }}
         name: uvicorn-backend
         location: 'eastus'
-        cpu: 4   # Optional
-        memory: 8   # Optional
+        cpu: 4
+        memory: 8
         environment-variables: DOTENV_PATH=/mnt/env/.env
+        ports: 80
+        ip-address: Public
