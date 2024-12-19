@@ -28,27 +28,32 @@ jobs:
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
-    # Step 4: Write .env file content into a file (from GitHub Secrets)
-    - name: Parse and Deploy Environment Variables
+    # Step 4: Write the .env file content into a file
+    - name: Write .env file
+      run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+
+    # Step 5: Parse and format environment variables for Azure
+    - name: Format environment variables for Azure
+      id: parse_env
       run: |
-         echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
-         while IFS='=' read -r key value; do
+        ENV_VARS=""
+        while IFS='=' read -r key value; do
           if [[ $key =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-            echo "$key=$value" >> env_vars.txt
+            ENV_VARS+="$key=$value\n"
           else
             echo "Invalid environment variable name: $key"
             exit 1
           fi
-         done < .env
-      shell: bash
-    
-    # Step 5: Build and push the Docker image
+        done < .env
+        echo "env_string=${ENV_VARS}" >> $GITHUB_ENV
+
+    # Step 6: Build and push the Docker image
     - name: Build and Push Docker Image
       run: |
         docker build . -t ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
         docker push ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
-    
-    # Step 6: Deploy to Azure Container Instances
+
+    # Step 7: Deploy to Azure Container Instances
     - name: Deploy to Azure Container Instances
       uses: azure/aci-deploy@v1
       with:
@@ -63,7 +68,5 @@ jobs:
         memory: 8
         ports: 8000
         ip-address: Public
-        environment-variables: |
-          $(cat env_vars.txt | tr '\n' ' ')
-
+        environment-variables: ${{ steps.parse_env.outputs.env_string }}
     
