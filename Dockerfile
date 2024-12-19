@@ -5,11 +5,12 @@ FROM python:3.10-slim
 WORKDIR /app
 
 # Install dependencies
-COPY requirements.txt .
+COPY requirements.txt . 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
+# Copy the application code and the .env file
 COPY . .
+COPY .env /mnt/env/.env
 
 # Expose the port FastAPI will run on
 EXPOSE 8000
