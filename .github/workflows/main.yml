@@ -58,11 +58,11 @@ jobs:
                 requests:
                   cpu: 4.0
                   memoryInGB: 8.0
-        osType: Linux
-        restartPolicy: Always
-        type: Microsoft.ContainerInstance/containerGroups" >> secure-env.yaml
-
-        cat secure-env.yaml
+          osType: Linux
+          restartPolicy: Always
+          type: Microsoft.ContainerInstance/containerGroups" >> secure-env.yaml
+  
+          cat secure-env.yaml
     # Step 6: Deploy using secure-env.yaml
     - name: Deploy to Azure Container Instances
       run: |
