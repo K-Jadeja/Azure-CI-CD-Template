@@ -13,7 +13,7 @@ jobs:
     # Step 1: Check out the repository
     - name: Checkout GitHub Action
       uses: actions/checkout@master
-      
+
     # Step 2: Log in to Azure
     - name: Login via Azure CLI
       uses: azure/login@v2
@@ -28,26 +28,28 @@ jobs:
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
-    # Step 4: Write the .env file content into a file
-    - name: Write .env file
-      run: echo -e "${{ secrets.ENV_FILE_CONTENT }}" > .env
-    
-    # Step 5: Parse and format environment variables for Azure
+    # Step 4: Build and Push the Docker Image
+    - name: Build and Push Docker Image
+      run: |
+        docker build . -t ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
+        docker push ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
+
+    # Step 5: Parse and format environment variables
     - name: Format environment variables for Azure
       id: parse_env
       run: |
         ENV_VARS=""
-        while IFS='=' read -r key value; do
+        echo "${{ secrets.ENV_FILE_CONTENT }}" | while IFS='=' read -r key value; do
           if [[ $key =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-            ENV_VARS+=" $key=$value"
+            ENV_VARS+="$key=$value "
           else
             echo "Invalid environment variable name: $key"
             exit 1
           fi
-        done < .env
+        done
         echo "env_string=${ENV_VARS}" >> $GITHUB_ENV
-    
-    # Step 7: Deploy to Azure Container Instances
+
+    # Step 6: Deploy to Azure Container Instances
     - name: Deploy to Azure Container Instances
       uses: azure/aci-deploy@v1
       with:
@@ -57,9 +59,9 @@ jobs:
         registry-username: ${{ secrets.ACR_USERNAME }}
         registry-password: ${{ secrets.ACR_PASSWORD }}
         name: uvicorn-backend
-        location: 'eastus'
+        location: eastus
         cpu: 4
         memory: 8
         ports: 8000
         ip-address: Public
-        environment-variables: ${{ steps.parse_env.outputs.env_string }}      
+        environment-variables: ${{ steps.parse_env.outputs.env_string }}
