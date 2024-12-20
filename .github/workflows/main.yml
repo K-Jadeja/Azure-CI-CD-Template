@@ -50,6 +50,11 @@ jobs:
         echo "env_string=${ENV_VARS}" >> $GITHUB_ENV
 
     # Step 6: Deploy to Azure Container Instances
+    - name: Debug Parsed Environment Variables
+      run: |
+        echo "Parsed ENV String:"
+        echo "${{ steps.parse_env.outputs.env_string }}"
+        
     - name: Deploy to Azure Container Instances
       uses: azure/aci-deploy@v1
       with:
