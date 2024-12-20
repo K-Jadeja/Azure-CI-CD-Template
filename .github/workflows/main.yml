@@ -52,6 +52,10 @@ jobs:
     # Step 6: Deploy to Azure Container Instances
     - name: Debug ENV_FILE_CONTENT
       run: echo "${{ secrets.ENV_FILE_CONTENT }}"
+
+    - name: Debug TEST_ENV_FILE_CONTENT
+      run: echo "${{ secrets.TEST_ENV_FILE_CONTENT }}"
+      
     - name: Debug Parsed Environment Variables
       run: |
         echo "Parsed ENV String:"
