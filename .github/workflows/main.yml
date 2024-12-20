@@ -28,51 +28,38 @@ jobs:
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
-    # Step 4: Write the .env file content into a file
-    - name: Write .env file
-      run: echo "${{ secrets.ENV_FILE_CONTENT }}" | sed 's/\\n/\n/g' > .env
+# Step 4: Write the .env file content into a file
+- name: Write .env file
+  run: echo -e "${{ secrets.ENV_FILE_CONTENT }}" > .env
 
-    # Step 5: Parse and format environment variables for Azure
-    - name: Format environment variables for Azure
-      id: parse_env
-      run: |
-        ENV_VARS=""
-        while IFS='=' read -r key value; do
-          if [[ $key =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-            ENV_VARS+="$key=$value\n"
-          else
-            echo "Invalid environment variable name: $key"
-            exit 1
-          fi
-        done < .env
-        echo "env_string=${ENV_VARS}" >> $GITHUB_ENV
+# Step 5: Parse and format environment variables for Azure
+- name: Format environment variables for Azure
+  id: parse_env
+  run: |
+    ENV_VARS=""
+    while IFS='=' read -r key value; do
+      if [[ $key =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        ENV_VARS+=" $key=$value"
+      else
+        echo "Invalid environment variable name: $key"
+        exit 1
+      fi
+    done < .env
+    echo "env_string=${ENV_VARS}" >> $GITHUB_ENV
 
-    # Step 6: Build and push the Docker image
-    - name: Build and Push Docker Image
-      run: |
-        docker build . -t ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
-        docker push ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
-
-    # Step 7: Deploy to Azure Container Instances
-    - name: Deploy to Azure Container Instances
-      uses: azure/aci-deploy@v1
-      with:
-        resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
-        dns-name-label: uvicorn-backend-${{ github.run_id }}
-        image: ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
-        registry-username: ${{ secrets.ACR_USERNAME }}
-        registry-password: ${{ secrets.ACR_PASSWORD }}
-        name: uvicorn-backend
-        location: 'eastus'
-        cpu: 4
-        memory: 8
-        ports: 8000
-        ip-address: Public
-        environment-variables: |
-          $(cat .env | tr '\n' ' ')
-
-    - name: Debug Environment Variables
-      run: |
-        az container exec --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-        --name uvicorn-backend --exec-command "env"
-      
+# Step 7: Deploy to Azure Container Instances
+- name: Deploy to Azure Container Instances
+  uses: azure/aci-deploy@v1
+  with:
+    resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+    dns-name-label: uvicorn-backend-${{ github.run_id }}
+    image: ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
+    registry-username: ${{ secrets.ACR_USERNAME }}
+    registry-password: ${{ secrets.ACR_PASSWORD }}
+    name: uvicorn-backend
+    location: 'eastus'
+    cpu: 4
+    memory: 8
+    ports: 8000
+    ip-address: Public
+    environment-variables: ${{ steps.parse_env.outputs.env_string }}      
