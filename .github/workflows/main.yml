@@ -45,16 +45,27 @@ jobs:
     - name: Format environment variables for Azure
       id: parse_env
       run: |
+        if [ -z "${{ secrets.ENV_FILE_CONTENT }}" ]; then
+          echo "env_string=" >> $GITHUB_ENV
+          exit 0
+        fi
+    
+        # Convert the ENV_FILE_CONTENT into properly formatted variables
+        echo -e "${{ secrets.ENV_FILE_CONTENT }}" > temp_env_file
+    
         ENV_VARS=""
-        echo "${{ secrets.ENV_FILE_CONTENT }}" | while IFS='=' read -r key value; do
+        while IFS='=' read -r key value; do
           if [[ $key =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
             ENV_VARS+="$key=$value "
           else
             echo "Invalid environment variable name: $key"
             exit 1
           fi
-        done
+        done < temp_env_file
+    
         echo "env_string=${ENV_VARS}" >> $GITHUB_ENV
+        rm temp_env_file
+
       
     - name: Debug Parsed Environment Variables
       run: |
