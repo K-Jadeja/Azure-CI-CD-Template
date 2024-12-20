@@ -30,7 +30,7 @@ jobs:
 
     # Step 4: Write the .env file content into a file
     - name: Write .env file
-      run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+      run: echo "${{ secrets.ENV_FILE_CONTENT }}" | sed 's/\\n/\n/g' > .env
 
     # Step 5: Parse and format environment variables for Azure
     - name: Format environment variables for Azure
@@ -68,5 +68,11 @@ jobs:
         memory: 8
         ports: 8000
         ip-address: Public
-        environment-variables: ${{ steps.parse_env.outputs.env_string }}
-    
+        environment-variables: |
+          $(cat .env | tr '\n' ' ')
+
+    - name: Debug Environment Variables
+      run: |
+        az container exec --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+        --name uvicorn-backend --exec-command "env"
+      
