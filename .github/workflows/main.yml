@@ -41,9 +41,18 @@ jobs:
         location: eastus
         name: uvicorn-backend
         properties:
+          osType: Linux
+          restartPolicy: Always
           containers:
           - name: uvicorn-backend
             properties:
+              image: ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
+              resources:
+                requests:
+                  cpu: 4.0
+                  memoryInGB: 8.0
+              ports:
+              - port: 8000
               environmentVariables:" > secure-env.yaml
         
                 echo "${{ secrets.ENV_FILE_CONTENT }}" | while IFS='=' read -r key value; do
@@ -51,18 +60,7 @@ jobs:
                   echo "        secureValue: \"$value\"" >> secure-env.yaml
                 done
         
-                echo "      image: ${{ secrets.ACR_LOGIN_SERVER }}/uvicorn-backend:${{ github.sha }}
-              ports:
-              - port: 8000
-              resources:
-                requests:
-                  cpu: 4.0
-                  memoryInGB: 8.0
-          osType: Linux
-          restartPolicy: Always
-          type: Microsoft.ContainerInstance/containerGroups" >> secure-env.yaml
-  
-          cat secure-env.yaml
+                cat secure-env.yaml
     # Step 6: Deploy using secure-env.yaml
     - name: Deploy to Azure Container Instances
       run: |
